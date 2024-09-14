@@ -12,68 +12,77 @@ const Translator = () => {
   const [translatedImageText, setTranslatedImageText] = useState('');  // Image translation output state
 
   // Text translation function using RapidAPI
-  const translateText = async () => {
-    const url = 'https://nlp-translation.p.rapidapi.com/v1/translate';
+const translateText = async () => {
+  const url = 'https://nlp-translation.p.rapidapi.com/v1/translate';
 
-    const data = new FormData();
-    data.append('text', inputText);
-    data.append('to', outputLang);  // Target language
-    data.append('from', inputLang); // Source language, 'auto' to auto-detect
+  const data = new URLSearchParams(); // Use URLSearchParams instead of FormData for API request
+  data.append('text', inputText);
+  data.append('to', outputLang);  // Target language
+  data.append('from', inputLang); // Source language, 'auto' to auto-detect
 
-    const options = {
-      method: 'POST',
-      headers: {
-        'x-rapidapi-key': '330032f6a6msh2c040c52967a8b4p18ff0fjsn9302f7579e4e',
-        'x-rapidapi-host': 'nlp-translation.p.rapidapi.com'
-      },
-      body: data
-    };
-
-    try {
-      const response = await fetch(url, options);
-      const result = await response.json();
-      setIsTranslated(true);
-      setOutputText(result.translated_text[outputLang]);
-    } catch (error) {
-      setIsTranslated(false);
-      console.error(error);
-    }
+  const options = {
+    method: 'POST',
+    headers: {
+      'x-rapidapi-key': '330032f6a6msh2c040c52967a8b4p18ff0fjsn9302f7579e4e',
+      'x-rapidapi-host': 'nlp-translation.p.rapidapi.com',
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: data
   };
+
+  try {
+    const response = await fetch(url, options);
+    const result = await response.json();
+    
+    if (response.ok && result.translated_text && result.translated_text[outputLang]) {
+      setIsTranslated(true);
+      setOutputText(result.translated_text[outputLang]);  // Set translated text from response
+    } else {
+      setIsTranslated(false);
+      console.error('Translation response format error:', result);
+    }
+  } catch (error) {
+    setIsTranslated(false);
+    console.error('Translation failed:', error);
+  }
+};
+
 
   // Function to handle image input change
   const handleImageChange = (e) => {
     setSelectedImage(e.target.files[0]);
   };
 
-  // Function to handle image translation using Python backend
-  const handleImageTranslation = async (e) => {
-    e.preventDefault();
+  // Image translation function using Python backend
+const handleImageTranslation = async (e) => {
+  e.preventDefault();
 
-    if (!selectedImage) {
-      alert('Please select an image first.');
-      return;
-    }
+  if (!selectedImage) {
+    alert('Please select an image first.');
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('image', selectedImage);
+  const formData = new FormData();
+  formData.append('image', selectedImage);
 
-    try {
-      const response = await fetch('/api/translate_text', {  // Adjust the endpoint to match your Flask or FastAPI route
-        method: 'POST',
-        body: formData
-      });
+  try {
+    const response = await fetch('/api/process_image', {  // Adjust the endpoint to match your Flask or FastAPI route
+      method: 'POST',
+      body: formData
+    });
 
-      if (!response.ok) {
-        throw new Error('Image translation failed');
-      }
-
+    if (response.ok) {
       const data = await response.json();
-      setTranslatedImageText(data.translated_text);  // Display the translated text from the Python backend
-    } catch (error) {
-      console.error(error);
-      setTranslatedImageText('Image translation failed.');
+      setTranslatedImageText(data.translated_text || 'No text extracted');  // Display the translated text
+    } else {
+      throw new Error('Image translation failed');
     }
-  };
+  } catch (error) {
+    console.error(error);
+    setTranslatedImageText('Image translation failed.');
+  }
+};
+
 
   // Function to clear text input and reset the translation state
   const clearInput = () => {
@@ -142,12 +151,12 @@ const Translator = () => {
         </div>
       </div>
 
-      {/* Image Translation Section */}
+      {/* Image Translation Section
       <div className="image-uploader-container">
         <h2>Translate Image</h2>
         
         {/* Image input form */}
-        <form onSubmit={handleImageTranslation}>
+        {/* <form onSubmit={handleImageTranslation}>
           <input 
             type="file" 
             onChange={handleImageChange} 
@@ -157,15 +166,19 @@ const Translator = () => {
         </form>
 
         {/* Display the translated text */}
-        <p className="text-box output-box">
-          {
-            translatedImageText === '' ?
-              <span className="output-placeholder">No image translation yet</span>
-              :
-              translatedImageText
-          }
+        {/* <p className="text-box output-box">
+         {
+          isTranslated === null ? 
+           <span className="output-placeholder">No translation yet</span> 
+          :
+          isTranslated === false ? 
+           <span className="output-placeholder translation-error">Translation failed</span> 
+          : 
+          outputText
+        }
         </p>
-      </div>
+
+      </div> */} 
     </section>
   );
 };

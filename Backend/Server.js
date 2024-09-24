@@ -2,11 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const app = express();
+const cors = require("cors")
 const taskRoutes = require('./routes/taskRoutes')
-
-app.use((req,res,next) => {
-    console.log("path " + req.path + "method" + req.method);
-});
 
 app.use(express.json());
 
@@ -15,6 +12,9 @@ app.use(express.json());
 // });
 
 //db connection
+app.use(cors())
+app.use("/api/tasks",taskRoutes)
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -24,4 +24,3 @@ mongoose
   })
   .catch((error) => console.log(error));
 
-  app.use("/api/tasks",taskRoutes)

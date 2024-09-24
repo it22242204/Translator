@@ -4,46 +4,49 @@ import pytesseract
 from googletrans import Translator
 import numpy as np
 
-# Set the path to the Tesseract executable
+# Set the path to the Tesseract executable (ensure this is correct on your system)
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 app = Flask(__name__)
 
-@app.route('/api/ml', methods=['POST'])
-def process_image():
+@app.route('/api/translate_text', methods=['POST'])
+def translate_text_route():
     """
-    API route that processes an uploaded image, extracts text using Tesseract OCR,
+    Route that processes an uploaded image, extracts text using Tesseract OCR,
     and translates it between Sinhala and English.
     """
     # Check if an image was uploaded
     if 'image' not in request.files:
         return jsonify({"error": "No image provided."}), 400
-    
-    # Read the image file from the request
-    file = request.files['image']
-    image_np = np.fromfile(file, np.uint8)
-    img = cv.imdecode(image_np, cv.IMREAD_COLOR)
 
-    if img is None:
-        return jsonify({"error": "Unable to load image."}), 400
+    try:
+        # Read the image file from the request
+        file = request.files['image']
+        image_np = np.fromfile(file, np.uint8)
+        img = cv.imdecode(image_np, cv.IMREAD_COLOR)
 
-    # Preprocess the image
-    preprocessed_image = preprocess_image(img)
+        if img is None:
+            return jsonify({"error": "Unable to load image."}), 400
 
-    # Extract text using Tesseract
-    extracted_text = extract_text(preprocessed_image)
+        # Preprocess the image for better OCR results
+        preprocessed_image = preprocess_image(img)
 
-    # Translate the extracted text
-    translated_text = translate_text(extracted_text)
+        # Extract text using Tesseract
+        extracted_text = extract_text(preprocessed_image)
 
-    if translated_text is None:
-        return jsonify({"error": "Translation failed."}), 500
+        # Translate the extracted text
+        translated_text = translate_text(extracted_text)
 
-    # Return the extracted and translated text as a JSON response
-    return jsonify({
-        "extracted_text": extracted_text,
-        "translated_text": translated_text
-    }), 200
+        if translated_text is None:
+            return jsonify({"error": "Translation failed."}), 500
+
+        # Return the extracted and translated text as a JSON response
+        return jsonify({
+            "extracted_text": extracted_text,
+            "translated_text": translated_text
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def preprocess_image(img):
     """
@@ -84,7 +87,6 @@ def extract_text(image, lang='sin+eng'):
 def translate_text(text):
     """
     Translate the extracted text between Sinhala and English based on the detected language.
-    This version includes names and proper nouns in the translation.
     
     Parameters:
     - text: The text to translate.

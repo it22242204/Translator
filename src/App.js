@@ -1,6 +1,12 @@
 import Translator from './Translator/Translator';
 import './App.css';
 import { useEffect, useState } from 'react';
+import Header from './Header/Header';
+import Footer from './Footer/Footer';
+import TasksList from './components/TasksList';
+// import { configureStore } from '@reduxjs/toolkit';
+// import tasksReducer from './slices/tasksSlice';
+
 
 function App() {
   const [translated_text, setTranslatedText] = useState('');
@@ -44,6 +50,7 @@ const handleSubmit = async (event) => {
 
   return (
     <div className="App">
+      <Header/>
       <Translator />
 
       {/* Image input form */}
@@ -61,6 +68,7 @@ const handleSubmit = async (event) => {
       
       </p>
     </div>
+    <Footer/>
     </div>
   );
 }

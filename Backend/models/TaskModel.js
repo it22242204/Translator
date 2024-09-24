@@ -4,11 +4,11 @@ const Schema = mongoose.Schema;
 
 const TaskSchema = new Schema(
   {
-    input_text: {
+    inputText: {
       type: String,
       require: true,
     },
-    translated_text: {
+    outputText: {
       type: String,
       require: true,
     },
